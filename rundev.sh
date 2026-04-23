@@ -5,7 +5,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-PORT="${PORT:-3000}"
+# Generate or get port
+if [ ! -f .project-port ]; then
+    PORT=$((4000 + RANDOM % 1000))
+    echo "$PORT" > .project-port
+fi
+PORT=$(cat .project-port)
+
 MAX_WAIT_SECONDS=60
 
 echo "=========================================="
