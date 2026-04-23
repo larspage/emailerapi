@@ -8,17 +8,31 @@ Guide for other websites on this server to integrate with the EmailerAPI.
 
 The EmailerAPI is a secure, localhost-only API that accepts email data, sends emails, and records everything to a database.
 
-**Base URL:** `http://127.0.0.1:3000`
+**Base URL:** `http://127.0.0.1:<PORT>` — port is stored in `.project-port`
 
 **Authentication:** All requests (except `/api/health`) require the `X-API-Key` header.
+
+---
+
+## Getting the Configuration
+
+The API runs on a dynamic port. To integrate, you need both the **port** and **API key**:
+
+```bash
+# Get the port
+EMAILER_PORT=$(cat /path/to/emailerapi/.project-port)
+
+# Get the API key (from .env file)
+EMAILER_API_KEY=$(grep API_KEY /path/to/emailerapi/.env | cut -d= -f2)
+```
 
 ---
 
 ## Quick Start
 
 ```javascript
-const API_KEY = process.env.API_KEY // Set in your .env
-const API_URL = 'http://127.0.0.1:3000'
+const API_KEY = process.env.EMAILER_API_KEY // Set in your .env
+const API_URL = process.env.EMAILER_API_URL // http://127.0.0.1:<PORT>
 
 async function sendEmail(data) {
   const response = await fetch(`${API_URL}/api/emails`, {
@@ -181,16 +195,21 @@ All errors follow this format:
 Set these in your website's `.env` file:
 
 ```env
-# API Key (get from EmailerAPI's .env file)
-API_KEY=your-api-key-here
+# EmailerAPI Configuration
+# Port is stored in /path/to/emailerapi/.project-port
+# API Key is in /path/to/emailerapi/.env
+EMAILER_PORT=<port-from-.project-port>
+EMAILER_API_KEY=<api-key-from-.env>
 ```
 
 ### Health Check
 
 ```javascript
+const PORT = process.env.EMAILER_PORT || 4552
+
 async function isEmailerAPIRunning() {
   try {
-    const response = await fetch('http://127.0.0.1:3000/api/health')
+    const response = await fetch(`http://127.0.0.1:${PORT}/api/health`)
     return response.ok
   } catch {
     return false
@@ -204,8 +223,9 @@ async function isEmailerAPIRunning() {
 
 ```javascript
 // lib/emailer.js
+// Get these from environment or read from emailerapi config
 const API_KEY = process.env.EMAILER_API_KEY
-const API_URL = process.env.EMAILER_API_URL || 'http://127.0.0.1:3000'
+const API_URL = process.env.EMAILER_API_URL // http://127.0.0.1:<PORT>
 
 export const emailer = {
   async sendEmail(data) {
